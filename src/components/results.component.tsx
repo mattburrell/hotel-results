@@ -23,7 +23,7 @@ export default function ResultsComponent({ holidays }: ResultsProps): JSX.Elemen
 
     return (
         <section className={styles['results-wrapper']}>
-            <h1><span>{`${holidays.length}`}</span> holidays found</h1>
+            <h1><span>{`${holidays.length}`}</span> {`${holidays.length === 1 ? 'holiday' : 'holidays'} found`}</h1>
             <section className={styles["stacked-results"]}>
                 {holidays.map((holiday, index) => (
                     <ResultComponent key={`${holiday.hotel.id}-${index}`} holiday={holiday} />
