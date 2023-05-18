@@ -9,9 +9,7 @@ import ResultsComponent from "../components/results.component";
 import FilterComponent from "../components/filter.component";
 import * as styles from './results.module.less';
 
-// ToDo:
-// Finish price per person filter
-// Write tests for this component
+// ToDo: Write tests for this component
 
 export default function ResultsRoute(): JSX.Element {
   const [searchParams] = useRouter();
@@ -52,10 +50,35 @@ export default function ResultsRoute(): JSX.Element {
     });
   }, [searchParams]);
 
+  const getPriceRange = (priceRange: string) => {
+    if (priceRange.startsWith('up to')) {
+      const max = priceRange.replace(/[^0-9]/g, '');
+      return [0, parseInt(max)]
+    } else if (priceRange.startsWith('over')) {
+      const min = priceRange.replace(/[^0-9]/g, '');
+      return [parseInt(min), Number.MAX_VALUE]
+    }
+    const parts = priceRange.match(/\d+/g);
+    const min = parts[0];
+    const max = parts[1];
+    return [parseInt(min), parseInt(max)];
+  }
+
+  const comparePriceRange = (holiday: Holiday, priceRange: string[]) => {
+    for (let i = 0; i < priceRange.length; i++) {
+      const [min, max] = getPriceRange(priceRange[i]);
+      if (holiday.pricePerPerson >= min && holiday.pricePerPerson <= max) {
+        return true
+      }
+    }
+  }
+
   const filteredHolidays = holidays.filter(holiday => {
     if (selectedFacilities.length === 0 || selectedFacilities.every(facility => holiday.hotel.content.hotelFacilities.includes(facility))) {
       if (selectedRatings.length === 0 || selectedRatings.includes(`${holiday.hotel.content.vRating}`)) {
-        return true;
+        if (selectedPriceRange.length === 0 || comparePriceRange(holiday, selectedPriceRange)) {
+          return true;
+        }
       }
     }
     return false;
