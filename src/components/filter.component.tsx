@@ -4,13 +4,7 @@ import { Holiday } from "../types/booking";
 import CheckboxGroup from "./checkboxgroup.component";
 import { useCallback } from "preact/hooks";
 
-interface FilterProps {
-    holidays: Holiday[];
-    filteredHolidays: Holiday[];
-    setSelectedFacilities: (facilities: string[]) => void;
-    setSelectedRatings: (ratings: string[]) => void;
-}
-
+// ToDo: Move these functions into a utils file
 export function sortRatings(array) {
     return array.sort((a, b) => {
         if (a === "NA" && b !== "NA") {
@@ -41,15 +35,38 @@ export function sortRatings(array) {
     });
 }
 
+function roundToNearestTen(value: number) {
+    return Math.round(value / 10) * 10;
+}
+
+function getPriceRanges(holidays: Holiday[]) {
+    const minPrice = Math.min(...holidays.map(holiday => holiday.pricePerPerson));
+    const maxPrice = Math.max(...holidays.map(holiday => holiday.pricePerPerson));
+    const priceRange = (maxPrice - minPrice) / 4;
+    const priceRange1 = roundToNearestTen(minPrice + priceRange);
+    const priceRange2 = roundToNearestTen(priceRange1 + priceRange);
+    const priceRange3 = roundToNearestTen(priceRange2 + priceRange);
+    return [`up to £${priceRange1}`, `£${priceRange1} - £${priceRange2}`, `£${priceRange2} - £${priceRange3}`, `over £${priceRange3}`]
+}
+
+interface FilterProps {
+    holidays: Holiday[];
+    filteredHolidays: Holiday[];
+    setSelectedFacilities: (facilities: string[]) => void;
+    setSelectedRatings: (ratings: string[]) => void;
+    setSelectedPriceRange: (priceRange: string[]) => void;
+}
 
 export default function FilterComponent({
     holidays,
     filteredHolidays,
     setSelectedFacilities,
     setSelectedRatings,
+    setSelectedPriceRange
 }: FilterProps): JSX.Element {
     const uniqueFacilities = [...new Set(holidays.flatMap(holiday => holiday.hotel.content.hotelFacilities))];
     const uniqueRatings = sortRatings([...new Set(holidays.map(holiday => `${holiday.hotel.content.vRating}`))]);
+    const priceRanges = holidays && holidays.length > 0 ? getPriceRanges(holidays) : [];
 
     return (
         <aside>
@@ -57,6 +74,15 @@ export default function FilterComponent({
                 <header>
                     <h3>Filter by...</h3>
                 </header>
+                <div className={styles["filter-group"]}>
+                    <h4>Price (PP)</h4>
+                    <CheckboxGroup
+                        options={priceRanges}
+                        id="ppp"
+                        filteredTotal={(opt) => 0} // ToDo: Implement this
+                        updateResults={useCallback((selected) => setSelectedPriceRange(selected), [setSelectedPriceRange])}
+                    />
+                </div>
                 <div className={styles["filter-group"]}>
                     <h4>Hotel Facilities</h4>
                     <CheckboxGroup

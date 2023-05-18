@@ -10,8 +10,8 @@ import FilterComponent from "../components/filter.component";
 import * as styles from './results.module.less';
 
 // ToDo:
+// Finish price per person filter
 // Write tests for this component
-// Add filter for price per person - refactor checkboxgroup component to handle range selections
 
 export default function ResultsRoute(): JSX.Element {
   const [searchParams] = useRouter();
@@ -19,6 +19,7 @@ export default function ResultsRoute(): JSX.Element {
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([])
   const [selectedRatings, setSelectedRatings] = useState<string[]>([])
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string[]>([])
 
   useEffect(() => {
     const departureDate = DateTime.fromFormat(
@@ -44,7 +45,7 @@ export default function ResultsRoute(): JSX.Element {
     doRequest("POST", "/cjs-search-api/search", requestBody).then(
       (response: unknown | BookingResponse) => {
         const bookingResponse = response as BookingResponse;
-        setHolidays(bookingResponse.holidays);
+        bookingResponse && bookingResponse.holidays && setHolidays(bookingResponse.holidays);
       }
     ).finally(() => {
       setIsLoading(false);
@@ -69,10 +70,12 @@ export default function ResultsRoute(): JSX.Element {
         </section>
         :
         <section className={styles["main"]}>
-          <FilterComponent holidays={holidays}
+          {holidays.length > 0 && <FilterComponent holidays={holidays}
             filteredHolidays={filteredHolidays}
             setSelectedFacilities={setSelectedFacilities}
-            setSelectedRatings={setSelectedRatings} />
+            setSelectedRatings={setSelectedRatings}
+            setSelectedPriceRange={setSelectedPriceRange}
+          />}
           <ResultsComponent holidays={filteredHolidays} />
         </section>
       }
