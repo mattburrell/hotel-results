@@ -43,7 +43,7 @@ export default function CheckboxGroup({ options, id, filteredTotal, updateResult
                             disabled={total === 0}
                             onChange={handleCheckboxChange} />
                         <label for={`${id}-${sanitizedOption}`}>{option}
-                            <span aria-label={`Count: ${total}`}>{` (${total})`}</span>
+                            {total > 0 && <span aria-label={`Count: ${total}`}>{` (${total})`}</span>}
                         </label>
                     </li>
                 )
