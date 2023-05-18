@@ -52,19 +52,10 @@ export default function ResultsRoute(): JSX.Element {
   }, [searchParams]);
 
   const filteredHolidays = holidays.filter(holiday => {
-    if (selectedFacilities.length === 0) {
-      return true;
-    }
-    if (selectedFacilities.every(facility => holiday.hotel.content.hotelFacilities.includes(facility))) {
-      return true;
-    }
-    return false;
-  }).filter(holiday => {
-    if (selectedRatings.length === 0) {
-      return true;
-    }
-    if (selectedRatings.includes(`${holiday.hotel.content.vRating}`)) {
-      return true;
+    if (selectedFacilities.length === 0 || selectedFacilities.every(facility => holiday.hotel.content.hotelFacilities.includes(facility))) {
+      if (selectedRatings.length === 0 || selectedRatings.includes(`${holiday.hotel.content.vRating}`)) {
+        return true;
+      }
     }
     return false;
   });
