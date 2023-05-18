@@ -35,11 +35,13 @@ export function sortRatings(array) {
     });
 }
 
-function roundToNearestTen(value: number) {
+export function roundToNearestTen(value: number) {
     return Math.round(value / 10) * 10;
 }
 
-function getPriceRanges(holidays: Holiday[]) {
+// Outside of component so can easily unit test
+export function getPriceRanges(holidays: Holiday[]) {
+    if (holidays.length === 0) return [];
     const minPrice = Math.min(...holidays.map(holiday => holiday.pricePerPerson));
     const maxPrice = Math.max(...holidays.map(holiday => holiday.pricePerPerson));
     const priceRange = (maxPrice - minPrice) / 4;
@@ -68,6 +70,20 @@ export default function FilterComponent({
     const uniqueRatings = sortRatings([...new Set(holidays.map(holiday => `${holiday.hotel.content.vRating}`))]);
     const priceRanges = holidays && holidays.length > 0 ? getPriceRanges(holidays) : [];
 
+    const getTotalFromPriceRange = (priceRange: string) => {
+        if (priceRange.startsWith('up to')) {
+            const max = priceRange.replace(/[^0-9]/g, '');
+            return filteredHolidays.filter(h => h.pricePerPerson <= parseInt(max)).length;
+        } else if (priceRange.startsWith('over')) {
+            const min = priceRange.replace(/[^0-9]/g, '');
+            return filteredHolidays.filter(h => h.pricePerPerson >= parseInt(min)).length;
+        }
+        const parts = priceRange.split(' - ');
+        const min = parts[0].replace(/[^0-9]/g, '');
+        const max = parts[1].replace(/[^0-9]/g, '');
+        return filteredHolidays.filter(h => h.pricePerPerson >= parseInt(min) && h.pricePerPerson <= parseInt(max)).length;
+    }
+
     return (
         <aside>
             <div id="filters" className={styles["filter-panel"]}>
@@ -79,7 +95,7 @@ export default function FilterComponent({
                     <CheckboxGroup
                         options={priceRanges}
                         id="ppp"
-                        filteredTotal={(opt) => 0} // ToDo: Implement this
+                        filteredTotal={(opt) => getTotalFromPriceRange(opt)}
                         updateResults={useCallback((selected) => setSelectedPriceRange(selected), [setSelectedPriceRange])}
                     />
                 </div>
