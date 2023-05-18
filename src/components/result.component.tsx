@@ -8,14 +8,25 @@ interface ResultProps {
     holiday: Holiday
 }
 
+function decodeHTMLEntities(encodedString: string) {
+    const element = document.createElement('span');
+    element.innerHTML = encodedString;
+    return element.innerHTML;
+}
+
 export default function ResultComponent({ holiday }: ResultProps): JSX.Element {
     const [searchParams] = useRouter();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loadedImages, setLoadedImages] = useState([]);
+    const [showDetails, setShowDetails] = useState(false);
 
     const guests = searchParams?.matches?.adults as unknown as number;
     const images = holiday.hotel.content.images;
     const totalImages = images.length;
+
+    const truncatedDesc = showDetails ?
+        decodeHTMLEntities(holiday.hotel.content.hotelDescription) :
+        `${decodeHTMLEntities(holiday.hotel.content.hotelDescription).slice(0, 150).trimEnd()}...`;
 
     useEffect(() => {
         const loadImage = (index: number) => {
@@ -34,6 +45,10 @@ export default function ResultComponent({ holiday }: ResultProps): JSX.Element {
             loadImage(currentIndex);
         }
     }, [currentIndex, images, loadedImages]);
+
+    const toggleExpansion = () => {
+        setShowDetails(!showDetails);
+    };
 
     const handlePrevImage = () => {
         const prevIndex = (currentIndex === 0) ? totalImages - 1 : currentIndex - 1;
@@ -65,28 +80,42 @@ export default function ResultComponent({ holiday }: ResultProps): JSX.Element {
             </div>
             <div className={styles["card-content"]}>
                 <div className={styles["card-details"]}>
-                    <div>{holiday.hotel.name}</div>
-                    <div className={styles["location"]}>{holiday.hotel.content.parentLocation}</div>
-                    <div className={styles["rating"]}>
-
+                    <header>
+                        <h2>{holiday.hotel.name}</h2>
+                    </header>
+                    <p className={styles["location"]}>{holiday.hotel.content.parentLocation}</p>
+                    <div>
+                        <span>Rating: {holiday.hotel.content.vRating}</span>
                     </div>
-                    <div className={styles["board-basis"]}>{holiday.hotel.content.boardBasis}</div>
+                    <div className={styles["board-basis"]}><p>{holiday.hotel.boardBasis}</p></div>
                     <div className={styles["features"]}>
                         <ul>
                             {holiday.hotel.content.atAGlance.map((feature, index) => (
-                                <li key={`${feature}-${index}`}>{feature}</li>
+                                <li key={`${feature}-${index}`}><span dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(feature) }}></span></li>
                             ))}
                         </ul>
                     </div>
                 </div>
+                {truncatedDesc !== "..." && <div className={styles["card-description"]}>
+                    <span dangerouslySetInnerHTML={{ __html: truncatedDesc }}></span>
+                    {!showDetails && <button onClick={toggleExpansion}>Read more</button>}
+                </div>}
+                <div className={styles["amenities"]}>
+                    <div className={styles["amenities-title"]}>Amenities</div>
+                    <ul>
+                        {holiday.hotel.content.hotelFacilities.map((amenity, index) => (
+                            <li key={`${amenity}-${index}`}>{amenity}</li>
+                        ))}
+                    </ul>
+                </div>
                 <div className={styles["card-price"]}>
                     <div className={styles["price"]}>
-                        <div className={styles["price-value"]}>£{holiday.pricePerPerson}pp</div>
-                        <div className={styles["price-text"]}>Total for {guests} guests £{holiday.totalPrice}</div>
+                        <p className={styles["price-value"]}>£{holiday.pricePerPerson}<span>pp</span></p>
+                        <p className={styles["price-text"]}>Total for {guests} guests £{holiday.totalPrice}</p>
+                        <p className={styles["price-points"]}>Earn from {holiday.virginPoints} extra Virgin Points and {holiday.tierPoints} Tier Points</p>
                     </div>
                 </div>
             </div>
-            <div className={styles["card-drawers"]}></div>
         </article>
     )
 }

@@ -6,11 +6,19 @@ import { doRequest } from "../services/http.service";
 import { BookingRequest, BookingResponse, Holiday } from "../types/booking";
 import { DateTime } from "luxon";
 import ResultsComponent from "../components/results.component";
+import FilterComponent from "../components/filter.component";
+import * as styles from './results.module.less';
+
+// ToDo:
+// Write tests for this component
+// Add filter for price per person - refactor checkboxgroup component to handle range selections
 
 export default function ResultsRoute(): JSX.Element {
   const [searchParams] = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [holidays, setHolidays] = useState<Holiday[]>([])
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([])
+  const [selectedRatings, setSelectedRatings] = useState<string[]>([])
 
   useEffect(() => {
     const departureDate = DateTime.fromFormat(
@@ -43,10 +51,40 @@ export default function ResultsRoute(): JSX.Element {
     });
   }, [searchParams]);
 
+  const filteredHolidays = holidays.filter(holiday => {
+    if (selectedFacilities.length === 0) {
+      return true;
+    }
+    if (selectedFacilities.every(facility => holiday.hotel.content.hotelFacilities.includes(facility))) {
+      return true;
+    }
+    return false;
+  }).filter(holiday => {
+    if (selectedRatings.length === 0) {
+      return true;
+    }
+    if (selectedRatings.includes(`${holiday.hotel.content.vRating}`)) {
+      return true;
+    }
+    return false;
+  });
+
   return (
     <section>
       <SearchComponent />
-      <ResultsComponent isLoading={isLoading} holidays={holidays} />
+      {isLoading ?
+        <section className={styles["loading"]}>
+          <h1>Searching for your perfect holiday...</h1>
+        </section>
+        :
+        <section className={styles["main"]}>
+          <FilterComponent holidays={holidays}
+            filteredHolidays={filteredHolidays}
+            setSelectedFacilities={setSelectedFacilities}
+            setSelectedRatings={setSelectedRatings} />
+          <ResultsComponent holidays={filteredHolidays} />
+        </section>
+      }
     </section>
   );
 }

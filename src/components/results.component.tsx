@@ -5,24 +5,15 @@ import * as styles from './results.module.less';
 import { Link } from 'preact-router';
 
 interface ResultsProps {
-    isLoading: boolean
     holidays: Holiday[]
 }
 
-export default function ResultsComponent({ isLoading, holidays }: ResultsProps): JSX.Element {
-    if (isLoading) {
-        return (
-            <section className={styles['results-wrapper']}>
-                <h1>Searching for your perfect holiday...</h1>
-            </section>
-        )
-    }
-
+export default function ResultsComponent({ holidays }: ResultsProps): JSX.Element {
     if (!holidays || holidays.length === 0) {
         return (
             <section className={styles['results-wrapper']}>
                 <h1>There&apos;s no availability on that date.</h1>
-                <p>Please search again or try one of these options:</p>
+                <p className={styles["error-message"]}>Please search again or try one of these options:</p>
                 <Link href="/">
                     Return to homepage
                 </Link>
